@@ -167,18 +167,44 @@ median_duration = all_bike |>
   group_by(year, month, weekdays) |>
   summarise(median_duration = median(duration, na.rm = TRUE))
 
-median_duration |> 
+(
+  median_duration |> 
   filter(year == 2020) |> 
-  drop_na(weekdays, median_duration) |>
-  ggplot(aes(x = weekdays, y = median_duration)) +  
-  geom_line() +  
+  group_by(month, weekdays) |>
+  ggplot(aes(x = weekdays, y = median_duration, group = month, group = weekdays)) +  
+  geom_point() +  
   geom_smooth(se = FALSE) +  
   facet_wrap(. ~ month, ncol = 1) +  
-  labs(title = "Median Ride Duration by Weekday and Month in 2020",
-       x = "Weekday", y = "Median Ride Duration") 
-
+  labs(title = "2020", x = "Weekday", y = "Median Ride Duration") +
+    ylim(8.5, 16.75)
+) + # put 2 plots together
+(
+  median_duration |> 
+  filter(year == 2024) |> 
+  group_by(month, weekdays) |>
+  ggplot(aes(x = weekdays, y = median_duration, group = month, group = weekdays)) +  
+  geom_point() +  
+  geom_smooth(se = FALSE) +  
+  facet_wrap(. ~ month, ncol = 1) +  
+  labs(title = "2024", x = "Weekday", y = "Median Ride Duration") +
+    ylim(7.25, 11)
+)
 ```
+Comparing between January and July: Median ride duration in July in both year are higher than January, and shows similar trends for weekdays. Especially in July that duration time drop in Friday, the trend keep increase throughout the week otherwise.
+Comparing between 2020 and 2024: Median ride duration time are generally much higher in 2020.
 
 
-There were relatively few electric Citi Bikes in 2020, but many more are available now. For data in 2024, make a figure that shows the impact of month, membership status, and bike type on the distribution of ride duration. Comment on your results.
+
+For data in 2024, make a figure that shows the impact of month, membership status, and bike type on the distribution of ride duration:
+```{r}
+all_2024 = bind_rows(jan_2024, july_2024)
+
+all_2024 |>
+  group_by(month, member_casual, rideable_type) |>
+  ggplot(aes(x = member_casual, y = duration, fill = rideable_type)) +
+  geom_boxplot() + 
+  facet_wrap(~ month) + 
+  labs(x = "Membership Status", y = "Ride Duration", fill = "Bike Type") 
+```
+According to the box plot, all groups have long tails in long-time ride duration from about 25 to 250. For casual riders, they ride classic bike for a longer time; for city bike members, they ride electric bike for a longer time. Duration of city bike members are more concentrated in shorter time. January and July show similar distribution, wile duration in July is slightly longer.
 
