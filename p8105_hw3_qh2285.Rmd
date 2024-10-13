@@ -113,3 +113,72 @@ Three education level shows same trends throughout the day that low activity at 
 
 
 # problem 3
+
+
+```{r}
+jan_2020 = 
+    read_csv("./data/citibike/Jan 2020 Citi.csv", na = c("NA", "", ".")) |>
+    janitor::clean_names() |>
+    mutate(month = "January") |>
+    mutate(year = 2020)
+jan_2024 = 
+    read_csv("./data/citibike/Jan 2024 Citi.csv", na = c("NA", "", ".")) |>
+    janitor::clean_names() |>
+    mutate(month = "January") |>
+    mutate(year = 2024)
+july_2020 = 
+    read_csv("./data/citibike/July 2020 Citi.csv", na = c("NA", "", ".")) |>
+    janitor::clean_names() |>
+    mutate(month = "July") |>
+    mutate(year = 2020)
+july_2024 = 
+    read_csv("./data/citibike/July 2024 Citi.csv", na = c("NA", "", ".")) |>
+    janitor::clean_names() |>
+    mutate(month = "July") |>
+    mutate(year = 2024)
+
+all_bike = bind_rows(jan_2020, jan_2024, july_2020, july_2024)
+```
+
+Produce a reader-friendly table showing the total number of rides in each combination of year and month separating casual riders and Citi Bike members:
+```{r}
+janitor::tabyl(all_bike, year, month, member_casual)
+```
+For casual riders, in 2020, 984 rides in January, and 5637 in July; in 2024, 2108 rides in January, and 10894 in July.
+For city bike member riders, in 2020, 11436 rides in January, and 15411 in July; in 2024, 16753 rides in January, and 36262 in July.
+
+
+
+Make a table showing the 5 most popular starting stations for July 2024; include the number of rides originating from these stations:
+```{r}
+top_starting = july_2024 |>
+  group_by(start_station_name) |>
+  summarise(total_rides = n()) |>
+  arrange(desc(total_rides)) |>
+  slice_head(n = 5) 
+top_starting
+```
+
+
+Make a plot to investigate the effects of day of the week, month, and year on median ride duration. This plot can include one or more panels, but should facilitate comparison across all variables of interest:
+```{r}
+median_duration = all_bike |>
+    mutate(weekdays = forcats::fct_relevel(weekdays, c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))) |>
+  group_by(year, month, weekdays) |>
+  summarise(median_duration = median(duration, na.rm = TRUE))
+
+median_duration |> 
+  filter(year == 2020) |> 
+  drop_na(weekdays, median_duration) |>
+  ggplot(aes(x = weekdays, y = median_duration)) +  
+  geom_line() +  
+  geom_smooth(se = FALSE) +  
+  facet_wrap(. ~ month, ncol = 1) +  
+  labs(title = "Median Ride Duration by Weekday and Month in 2020",
+       x = "Weekday", y = "Median Ride Duration") 
+
+```
+
+
+There were relatively few electric Citi Bikes in 2020, but many more are available now. For data in 2024, make a figure that shows the impact of month, membership status, and bike type on the distribution of ride duration. Comment on your results.
+
